@@ -1,0 +1,30 @@
+{
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "$id": "/properties/title",
+      "type": "string",
+      "title": "The Title Schema ",
+      "default": "",
+      "examples": ["albondigas"],
+      "minLength": 1
+    },
+    "salary": {
+      "$id": "/properties/salary",
+      "type": "integer",
+      "title": "The Salary Schema ",
+      "default": 0,
+      "examples": [45]
+    },
+    "equity": {
+      "$id": "/properties/equity",
+      "type": "integer",
+      "title": "The Equity Schema ",
+      "default": 0,
+      "examples": [70]
+    }
+  },
+  "required": []
+}
