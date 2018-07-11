@@ -6,9 +6,12 @@ CREATE DATABASE "jobbotron";
 
 CREATE TABLE companies (id SERIAL PRIMARY KEY,
 name TEXT NOT NULL,
-logo TEXT,
+email TEXT UNIQUE NOT NULL,
 handle TEXT UNIQUE NOT NULL,
-password TEXT NOT NULL);
+password TEXT NOT NULL,
+logo TEXT,
+employees ARRAY DEFAULT [],
+jobs ARRAY DEFAULT [])
 
 INSERT INTO companies (name, logo, handle, password) values
 ('MomCorp', 'https://res.cloudinary.com/teepublic/image/private/s--AHL2aAiC--/t_Preview/b_rgb:d3ddd8,c_limit,f_jpg,h_630,q_90,w_630/v1446232468/production/designs/236811_1.jpg', 'mom', 'pass'),
@@ -32,9 +35,9 @@ applied_to ARRAY DEFAULT []);
 
 CREATE TABLE jobs (id SERIAL PRIMARY KEY,
 title TEXT NOT NULL,
+company INTEGER REFERENCES companies (handle) ON DELETE CASCADE,
 salary INTEGER NOT NULL,
-equity FLOAT,
-current_company INTEGER REFERENCES companies (handle) ON DELETE CASCADE);
+equity FLOAT);
 
 INSERT INTO jobs (title, salary, equity, current_company) VALUES
 ('pencil pusher', 30000, 5, 2),
