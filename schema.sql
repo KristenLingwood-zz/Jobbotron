@@ -25,7 +25,8 @@ email TEXT NOT NULL,
 photo TEXT,
 username TEXT UNIQUE NOT NULL,
 password TEXT NOT NULL,
-company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE);
+current_company INTEGER REFERENCES companies (handle) ON DELETE SET NULL,
+applied_to ARRAY DEFAULT []);
 
 
 
@@ -33,9 +34,9 @@ CREATE TABLE jobs (id SERIAL PRIMARY KEY,
 title TEXT NOT NULL,
 salary INTEGER NOT NULL,
 equity FLOAT,
-company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE);
+current_company INTEGER REFERENCES companies (handle) ON DELETE CASCADE);
 
-INSERT INTO jobs (title, salary, equity, company_id) VALUES
+INSERT INTO jobs (title, salary, equity, current_company) VALUES
 ('pencil pusher', 30000, 5, 2),
 ('code monkey', 80000, 4, 2),
 ('well-compensated narcissist', 100000, 99, 3),

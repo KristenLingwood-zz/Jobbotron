@@ -28,7 +28,7 @@ router.get('/:id', ensureLoggedIn, async (req, res, next) => {
       req.params.id
     ]);
     const userData = await db.query(
-      'SELECT users.id FROM users WHERE users.company_id=$1',
+      'SELECT users.id FROM users WHERE users.current_company=$1',
       [req.params.id]
     );
     const userList = userData.rows.map(x => x.id);

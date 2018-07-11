@@ -17,7 +17,7 @@ router.post('', async (req, res, next) => {
     }
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const userData = await db.query(
-      `INSERT INTO users (first_name, last_name, email, photo, username, password, company_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      `INSERT INTO users (first_name, last_name, email, photo, username, password, current_company) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
       [
         req.body.first_name,
         req.body.last_name,
@@ -25,7 +25,7 @@ router.post('', async (req, res, next) => {
         req.body.photo,
         req.body.username,
         hashedPassword,
-        req.body.company_id
+        req.body.current_company
       ]
     );
     return res.json(userData.rows[0]);
