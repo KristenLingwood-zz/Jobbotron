@@ -63,6 +63,10 @@ describe('GET /companies', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
   });
+  test('get unauth error without token', async () => {
+    const response = await request(app).get('/companies');
+    expect(response.status).toBe(401);
+  });
 });
 
 afterEach(async () => {

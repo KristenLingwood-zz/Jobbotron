@@ -6,7 +6,7 @@ function ensureLoggedIn(req, res, next) {
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     return next();
   } catch (err) {
-    return res.json({ message: 'Unauthorized -- not logged in' });
+    return res.status(401).json({ message: 'Unauthorized -- not logged in' });
   }
 }
 
