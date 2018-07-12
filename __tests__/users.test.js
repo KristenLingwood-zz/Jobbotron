@@ -66,7 +66,7 @@ beforeEach(async () => {
       password: 'secret'
     });
   auth.token = response.body.token;
-  auth.current_user_id = jwt.decode(auth.token).user_id;
+  auth.current_username = jwt.decode(auth.token).username;
 });
 
 describe('GET /users', () => {
@@ -78,10 +78,10 @@ describe('GET /users', () => {
   });
 });
 
-describe('DELETE /users/:id', () => {
+describe('DELETE /users/:username', () => {
   test('successfully deletes own user', async () => {
     const response = await request(app)
-      .delete(`/users/${auth.current_current_company}`)
+      .delete(`/users/${auth.current_username}`)
       .set('authorization', auth.token);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'User deleted' });

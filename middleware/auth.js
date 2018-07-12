@@ -32,10 +32,19 @@ function ensureCorrectUser(req, res, next) {
         message: 'Unauthorized -- not an individual user account'
       });
     }
-    if (decodedToken.id === +req.params.id) {
+    if (decodedToken.username === req.params.username) {
       return next();
-    } else return res.json({ message: 'Unauthorized -- incorrect user' });
+    } else {
+      console.log(
+        'decoded username:',
+        decodedToken.username,
+        'params username:',
+        req.params.username
+      );
+      return res.json({ message: 'Unauthorized -- incorrect user' });
+    }
   } catch (err) {
+    console.log(err);
     return next(err);
   }
 }

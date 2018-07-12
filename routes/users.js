@@ -51,7 +51,7 @@ router.post('/auth', async (req, res, next) => {
 
     const token = jsonwebtoken.sign(
       {
-        id: userData.rows[0].id,
+        username: userData.rows[0].username,
         acctType: 'individual'
       },
       'CONTIGO'
@@ -63,9 +63,31 @@ router.post('/auth', async (req, res, next) => {
 });
 
 // GET /users
-router.get('', ensureLoggedIn, async (req, res, next) => {
+router.get('/', ensureLoggedIn, async (req, res, next) => {
   try {
-    const data = await db.query('SELECT * FROM users');
+    const limit = req.query.limit || 50;
+    const offset = req.query.offest || 0;
+    let data;
+    if (!req.query.search) {
+      data = await db.query(
+        `SELECT username, first_name, last_name, email, photo, current_company, array_agg(job_id) as applied_to 
+      FROM users 
+      LEFT OUTER JOIN jobs_users 
+      ON (users.id = jobs_users.user_id) 
+      GROUP BY users.id LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      );
+    } else {
+      data = await db.query(
+        `SELECT username, first_name, last_name, email, photo, current_company, array_agg(job_id) as applied_to 
+        FROM users 
+        LEFT OUTER JOIN jobs_users 
+        ON (users.id = jobs_users.user_id) 
+        WHERE username ILIKE $1
+        GROUP BY users.id LIMIT $2 OFFSET $3`,
+        [req.query.search, limit, offset]
+      );
+    }
     return res.json(data.rows);
   } catch (err) {
     return next(err);
@@ -111,11 +133,14 @@ router.patch('/:id', ensureCorrectUser, async (req, res, next) => {
 });
 
 // DELETE /useres/:id
-router.delete('/:id', ensureCorrectUser, async (req, res, next) => {
+router.delete('/:username', ensureCorrectUser, async (req, res, next) => {
   try {
-    await db.query('DELETE FROM users WHERE id=$1', [req.params.id]);
+    await db.query('DELETE FROM users WHERE username=$1', [
+      req.params.username
+    ]);
     return res.json({ message: 'User deleted' });
   } catch (err) {
+    console.log(err);
     return next(err);
   }
 });
