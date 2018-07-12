@@ -58,35 +58,6 @@ router.post('', async function(req, res, next) {
   }
 });
 
-// POST /companies/auth
-router.post('/auth', async (req, res, next) => {
-  try {
-    const companyData = await db.query(
-      'SELECT * FROM companies WHERE handle=$1',
-      [req.body.handle]
-    );
-    if (companyData.rows.length === 0)
-      return res.json({ message: 'Invalid company handle' });
-
-    const result = await bcrypt.compare(
-      req.body.password,
-      companyData.rows[0].password
-    );
-    if (!result) return res.json({ message: 'Invalid password' });
-
-    const token = jsonwebtoken.sign(
-      {
-        handle: companyData.rows[0].handle,
-        acctType: 'company'
-      },
-      'CONTIGO'
-    );
-    return res.json({ token });
-  } catch (err) {
-    return next(err);
-  }
-});
-
 // PATCH /companies/:handle
 router.patch('/:handle', ensureCorrectCompany, async (req, res, next) => {
   try {

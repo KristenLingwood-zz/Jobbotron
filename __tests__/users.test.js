@@ -45,7 +45,7 @@ beforeEach(async () => {
     [hashedCompanyPassword]
   );
   const companyResponse = await request(app)
-    .post('/companies/auth')
+    .post('/company-auth')
     .send({
       handle: 'testcompany',
       password: 'secret'
@@ -60,7 +60,7 @@ beforeEach(async () => {
     [hashedPassword, companyData.rows[0].current_company]
   );
   const response = await request(app)
-    .post('/users/auth')
+    .post('/user-auth')
     .send({
       username: 'test',
       password: 'secret'
@@ -75,6 +75,21 @@ describe('GET /users', () => {
       .get('/users')
       .set('authorization', auth.token);
     expect(response.body).toHaveLength(1);
+  });
+});
+
+describe('PATCH /users/:username', () => {
+  test('successfully patches own user', async () => {
+    const response = await request(app)
+      .patch('/users/test')
+      .set('authorization', auth.token)
+      .send({
+        username: 'fdurst',
+        first_name: 'Frid'
+      });
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('username', 'fdurst');
+    expect(response.body).toHaveProperty('first_name', 'Frid');
   });
 });
 

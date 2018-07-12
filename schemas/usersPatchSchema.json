@@ -37,7 +37,22 @@
       ],
       "minLength": 1
     },
-
+    "username": {
+      "$id": "/properties/username",
+      "type": "string",
+      "title": "The Username Schema ",
+      "default": "",
+      "examples": ["slevey_mcd"],
+      "minLength": 1,
+      "maxLength": 55
+    },
+    "current_company": {
+      "$id": "/properties/current_company",
+      "type": "string",
+      "title": "The current_company Schema ",
+      "default": "",
+      "examples": ["RithmSkool"]
+    },
     "password": {
       "$id": "/properties/password",
       "type": "string",

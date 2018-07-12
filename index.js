@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const userRoutes = require('./routes/users');
 const companyRoutes = require('./routes/companies');
 const jobRoutes = require('./routes/jobs');
+const authRoutes = require('./routes/authROutes');
 
 app.use(bodyParser.json());
 // TODO:BONUS: if I build a frontend there's something else I have to do with bodyParser; check W6-FRI notes
@@ -14,6 +15,7 @@ app.use(morgan('dev'));
 app.use('/users', userRoutes);
 app.use('/companies', companyRoutes);
 app.use('/jobs', jobRoutes);
+app.use('', authRoutes);
 
 app.use((req, res, next) => {
   const err = new Error('Not Found');

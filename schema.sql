@@ -33,6 +33,9 @@ current_company TEXT REFERENCES companies (handle) ON DELETE SET NULL
 -- applied_to ARRAY DEFAULT []
 );
 
+-- INSERT INTO users (first_name, last_name, email, username, password) VALUES
+-- ('Bobson', 'Dugnutt', 'bd@email.com', 'bdug', 'pass'),
+-- ('Sleve', 'McDichael', 'smd@email.com', 'slevey', 'pass');
 
 
 CREATE TABLE jobs (id SERIAL PRIMARY KEY,
