@@ -31,7 +31,7 @@ beforeAll(async () => {
     title TEXT NOT NULL,
     salary INTEGER NOT NULL,
     equity FLOAT,
-    current_company TEXT REFERENCES companies (handle) ON DELETE CASCADE)`);
+    company TEXT REFERENCES companies (handle) ON DELETE CASCADE)`);
 
   await db.query(`CREATE TABLE jobs_users (id SERIAL PRIMARY KEY,
     job_id INTEGER REFERENCES jobs (id) ON DELETE CASCADE,
@@ -42,7 +42,7 @@ beforeEach(async () => {
   // do the same for company "companies"
   const hashedCompanyPassword = await bcrypt.hash('secret', 1);
   const companyData = await db.query(
-    "INSERT INTO companies (name, handle, password, email) VALUES ('Test Co', 'testcompany', $1, 'email@email.com') RETURNING *",
+    "INSERT INTO companies (name, handle, email, password) VALUES ('Test Co', 'testcompany', 'email@email.com', $1) RETURNING *",
     [hashedCompanyPassword]
   );
   const companyResponse = await request(app)
@@ -53,60 +53,20 @@ beforeEach(async () => {
     });
   auth.company_token = companyResponse.body.token;
   auth.current_current_company = jwt.decode(auth.company_token).current_company;
-
-  // login a user, get a token, store the user ID and token
-  const hashedPassword = await bcrypt.hash('secret', 1);
-  await db.query(
-    "INSERT INTO users (username, first_name, last_name, email, password, current_company) VALUES ('test', 'Fred', 'Durst', 'fred@test.com', $1, $2)",
-    [hashedPassword, companyData.rows[0].current_company]
-  );
-  const response = await request(app)
-    .post('/user-auth')
-    .send({
-      username: 'test',
-      password: 'secret'
-    });
-  auth.token = response.body.token;
-  auth.current_username = jwt.decode(auth.token).username;
 });
 
-describe('GET /users', () => {
-  test('gets a list of 1 user', async () => {
+describe('GET /companies', () => {
+  test('Gets a list of companies', async () => {
     const response = await request(app)
-      .get('/users')
-      .set('authorization', auth.token);
+      .get('/companies')
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
   });
 });
 
-describe('PATCH /users/:username', () => {
-  test('successfully patches own user', async () => {
-    const response = await request(app)
-      .patch('/users/test')
-      .set('authorization', auth.token)
-      .send({
-        username: 'fdurst',
-        first_name: 'Frid'
-      });
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('username', 'fdurst');
-    expect(response.body).toHaveProperty('first_name', 'Frid');
-  });
-});
-
-describe('DELETE /users/:username', () => {
-  test('successfully deletes own user', async () => {
-    const response = await request(app)
-      .delete(`/users/${auth.current_username}`)
-      .set('authorization', auth.token);
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'User deleted' });
-  });
-});
-
 afterEach(async () => {
-  //delete the users and company users
-  await db.query('DELETE FROM users');
+  //delete the companies
   await db.query('DELETE FROM companies');
 });
 

@@ -37,8 +37,8 @@ router.post('', async (req, res, next) => {
 // GET /users
 router.get('/', ensureLoggedIn, async (req, res, next) => {
   try {
-    const limit = req.query.limit || 50;
-    const offset = req.query.offest || 0;
+    const limit = !req.query.limit ? 50 : Math.min(req.query.limit, 50);
+    const offset = req.query.offset || 0;
     let data;
     if (!req.query.search) {
       data = await db.query(
@@ -99,13 +99,15 @@ router.patch('/:username', ensureCorrectUser, async (req, res, next) => {
     ]);
     let current_company =
       req.body.current_company || oldData.rows[0].current_company;
-    let username = req.body.current_company || oldData.rows[0].username;
+    let username = req.body.username || oldData.rows[0].username;
     let first_name = req.body.first_name || oldData.rows[0].first_name;
     let last_name = req.body.last_name || oldData.rows[0].last_name;
     let email = req.body.email || oldData.rows[0].email;
     let photo = req.body.photo || oldData.rows[0].photo || null;
-    let password =
-      (await bcrypt.hash(req.body.password, 10)) || oldData.rows[0].password;
+    let password = oldData.rows[0].password;
+    if (req.body.password) {
+      password = await bcrypt.hash(req.body.password, 10);
+    }
     const data = await db.query(
       'UPDATE users SET first_name=$1, last_name=$2, email=$3, photo=$4, password=$5, username=$6, current_company=$7 WHERE username=$8 RETURNING *',
       [

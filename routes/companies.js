@@ -10,13 +10,45 @@ const {
 const { validate } = require('jsonschema');
 const companiesPostSchema = require('../schemas/companiesPostSchema.json');
 const companiesPatchSchema = require('../schemas/companiesPatchSchema.json');
+const APIError = require('../APIError');
 
 // GET /companies
 router.get('', ensureLoggedIn, async (req, res, next) => {
   try {
-    const data = await db.query('SELECT * FROM companies');
+    const limit = !req.query.limit ? 50 : Math.min(req.query.limit, 50);
+    const offset = req.query.offset || 0;
+    let data;
+    if (!req.query.search) {
+      console.log('before query');
+      data = await db.query(
+        `SELECT name, companies.email, handle, logo, array_agg(jobs.id) as jobs, array_agg(users.username) as employees
+        FROM companies
+        LEFT OUTER JOIN jobs
+        ON (companies.handle = jobs.company)
+        LEFT OUTER JOIN users
+        ON (users.current_company = companies.handle)
+        GROUP BY (handle, name, companies.email, logo)
+        LIMIT $1 OFFSET $2;`,
+        [limit, offset]
+      );
+    } else {
+      data = await db.query(
+        `SELECT name, companies.email, handle, logo, array_agg(jobs.id) as jobs, array_agg(users.username) as employees
+        FROM companies
+        LEFT OUTER JOIN jobs
+        ON (companies.handle = jobs.company)
+        LEFT OUTER JOIN users
+        ON (users.current_company = companies.handle)
+        WHERE handle ILIKE $1
+        GROUP BY (handle, name, companies.email, logo)
+        LIMIT $2 OFFSET $3;`,
+        [req.query.search, limit, offset]
+      );
+    }
+    console.log('data:');
     return res.json(data.rows);
   } catch (err) {
+    err = new APIError(500, 'Bad Request', 'Invalid Query');
     return next(err);
   }
 });
