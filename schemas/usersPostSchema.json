@@ -9,7 +9,8 @@
       "title": "The First_name Schema ",
       "default": "",
       "examples": ["Sleve"],
-      "minLength": 1
+      "minLength": 1,
+      "maxLength": 55
     },
     "last_name": {
       "$id": "/properties/last_name",
@@ -17,19 +18,23 @@
       "title": "The Last_name Schema ",
       "default": "",
       "examples": ["McDichael"],
-      "minLength": 1
+      "minLength": 1,
+      "maxLength": 55
     },
     "email": {
       "$id": "/properties/email",
       "type": "string",
+      "format": "email",
       "title": "The Email Schema ",
       "default": "",
       "examples": ["smd@email.com"],
-      "minLength": 1
+      "minLength": 6,
+      "maxLength": 60
     },
     "photo": {
       "$id": "/properties/photo",
       "type": "string",
+      "format": "uri",
       "title": "The Photo Schema ",
       "default": "",
       "examples": [
@@ -43,7 +48,8 @@
       "title": "The Username Schema ",
       "default": "",
       "examples": ["slevey_mcd"],
-      "minLength": 1
+      "minLength": 1,
+      "maxLength": 55
     },
     "password": {
       "$id": "/properties/password",
@@ -51,22 +57,23 @@
       "title": "The Password Schema ",
       "default": "",
       "examples": ["mcd"],
-      "minLength": 1
+      "minLength": 5,
+      "maxLength": 55
     },
-    "company_id": {
-      "$id": "/properties/company_id",
-      "type": "integer",
-      "title": "The Company_id Schema ",
-      "default": 0,
-      "examples": [1]
+    "current_company": {
+      "$id": "/properties/current_company",
+      "type": "string",
+      "title": "The current_company Schema ",
+      "default": "",
+      "examples": ["RithmSkool"]
+    },
+    "applied_to:": {
+      "$id": "/properties/applied_to",
+      "type": "array",
+      "title": "The applied_to Schema ",
+      "default": [],
+      "examples": []
     }
   },
-  "required": [
-    "first_name",
-    "last_name",
-    "email",
-    "username",
-    "password",
-    "company_id"
-  ]
+  "required": ["first_name", "last_name", "email", "username", "password"]
 }

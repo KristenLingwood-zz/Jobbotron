@@ -17,7 +17,7 @@ router.post('', ensureCompanyAcct, async (req, res, next) => {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     const data = await db.query(
-      'INSERT INTO jobs (title, salary, equity, company_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      'INSERT INTO jobs (title, salary, equity, company) VALUES ($1, $2, $3, $4) RETURNING *',
       [req.body.title, req.body.salary, req.body.equity, decodedToken.id]
     );
     return res.json(data.rows[0]);
@@ -56,12 +56,12 @@ router.patch('/:id', async (req, res, next) => {
       return next(result.errors);
     }
     const currentCompany = await db.query(
-      'SELECT company_id FROM jobs WHERE id=$1',
+      'SELECT company FROM jobs WHERE id=$1',
       [req.params.id]
     );
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
-    if (currentCompany.rows[0].company_id !== decodedToken.id) {
+    if (currentCompany.rows[0].company !== decodedToken.handle) {
       return res.json({ message: 'Unauthorized -- wrong company' });
     }
     const oldData = await db.query('SELECT * FROM jobs WHERE id=$1', [
@@ -71,8 +71,8 @@ router.patch('/:id', async (req, res, next) => {
     let salary = req.body.salary || oldData.rows[0].salary;
     let equity = req.body.equity || oldData.rows[0].equity || null;
     const data = await db.query(
-      'UPDATE jobs SET title=$1, salary=$2, equity=$3, company_id=$4 WHERE id=$5 RETURNING *',
-      [title, salary, equity, decodedToken.id, req.params.id]
+      'UPDATE jobs SET title=$1, salary=$2, equity=$3, company=$4 WHERE id=$5 RETURNING *',
+      [title, salary, equity, decodedToken.handle, req.params.id]
     );
     return res.json(data.rows[0]);
   } catch (err) {
@@ -84,12 +84,12 @@ router.patch('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const currentCompany = await db.query(
-      'SELECT company_id FROM jobs WHERE id=$1',
+      'SELECT company FROM jobs WHERE id=$1',
       [req.params.id]
     );
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
-    if (currentCompany.rows[0].company_id !== decodedToken.id) {
+    if (currentCompany.rows[0].company !== decodedToken.handle) {
       return res.json({ message: 'Unauthorized -- wrong company' });
     }
     await db.query('DELETE FROM jobs WHERE id=$1', [req.params.id]);

@@ -24,13 +24,13 @@ beforeAll(async () => {
     photo TEXT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE)`);
+    current_company INTEGER REFERENCES companies (id) ON DELETE CASCADE)`);
 
   await db.query(`CREATE TABLE jobs (id SERIAL PRIMARY KEY,
     title TEXT NOT NULL,
     salary INTEGER NOT NULL,
     equity FLOAT,
-    company_id INTEGER REFERENCES companies (id) ON DELETE CASCADE)`);
+    current_company INTEGER REFERENCES companies (id) ON DELETE CASCADE)`);
 
   await db.query(`CREATE TABLE jobs_users (id SERIAL PRIMARY KEY,
     job_id INTEGER REFERENCES jobs (id) ON DELETE CASCADE,
@@ -51,13 +51,13 @@ beforeEach(async () => {
       password: 'secret'
     });
   auth.company_token = companyResponse.body.token;
-  auth.current_company_id = jwt.decode(auth.company_token).company_id;
+  auth.current_current_company = jwt.decode(auth.company_token).current_company;
 
   // login a user, get a token, store the user ID and token
   const hashedPassword = await bcrypt.hash('secret', 1);
   await db.query(
-    "INSERT INTO users (username, first_name, last_name, email, password, company_id) VALUES ('test', 'Fred', 'Durst', 'fred@test.com', $1, $2)",
-    [hashedPassword, companyData.rows[0].company_id]
+    "INSERT INTO users (username, first_name, last_name, email, password, current_company) VALUES ('test', 'Fred', 'Durst', 'fred@test.com', $1, $2)",
+    [hashedPassword, companyData.rows[0].current_company]
   );
   const response = await request(app)
     .post('/users/auth')
@@ -66,7 +66,7 @@ beforeEach(async () => {
       password: 'secret'
     });
   auth.token = response.body.token;
-  auth.current_user_id = jwt.decode(auth.token).user_id;
+  auth.current_username = jwt.decode(auth.token).username;
 });
 
 describe('GET /users', () => {
@@ -78,10 +78,10 @@ describe('GET /users', () => {
   });
 });
 
-describe('DELETE /users/:id', () => {
+describe('DELETE /users/:username', () => {
   test('successfully deletes own user', async () => {
     const response = await request(app)
-      .delete(`/users/${auth.current_company_id}`)
+      .delete(`/users/${auth.current_username}`)
       .set('authorization', auth.token);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'User deleted' });
