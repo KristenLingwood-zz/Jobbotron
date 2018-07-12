@@ -69,6 +69,58 @@ describe('GET /companies', () => {
   });
 });
 
+describe('GET /companies/:handle', () => {
+  test('Gets a single company', async () => {
+    const response = await request(app)
+      .get('/companies/testcompany')
+      .set('authorization', auth.company_token);
+    expect(response.body).toHaveProperty('handle', 'testcompany');
+  });
+  test('get unauth error without token', async () => {
+    const response = await request(app).get('/companies/testcompany');
+    expect(response.status).toBe(401);
+  });
+});
+
+describe('POST /companies', () => {
+  test('successfully creates new company', async () => {
+    const response = await request(app)
+      .post('/companies')
+      .send({
+        handle: 'awesomeinc',
+        name: 'Awesome, Inc.',
+        password: 'password',
+        email: 'email@ermail.com'
+      });
+    expect(response.body).toHaveProperty('handle', 'awesomeinc');
+  });
+});
+
+describe('PATCH /companies/:handle', () => {
+  test('successfully patches own company', async () => {
+    const response = await request(app)
+      .patch('/companies/testcompany')
+      .set('authorization', auth.company_token)
+      .send({
+        handle: 'bestcompany',
+        name: 'Best Co.'
+      });
+    // expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('handle', 'bestcompany');
+    expect(response.body).toHaveProperty('name', 'Best Co.');
+  });
+});
+
+describe('DELETE /companies/:handle', () => {
+  test('successfully deletes own company', async () => {
+    const response = await request(app)
+      .delete(`/companies/testcompany`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Company deleted' });
+  });
+});
+
 afterEach(async () => {
   //delete the companies
   await db.query('DELETE FROM companies');

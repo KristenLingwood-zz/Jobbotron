@@ -71,11 +71,35 @@ beforeEach(async () => {
 });
 
 describe('GET /users', () => {
-  test('gets a list of 1 user', async () => {
+  test('gets a list of users', async () => {
     const response = await request(app)
       .get('/users')
       .set('authorization', auth.token);
     expect(response.body).toHaveLength(1);
+  });
+});
+
+describe('GET /users/:username', () => {
+  test('successfully get a single user', async () => {
+    const response = await request(app)
+      .get('/users/test')
+      .set('authorization', auth.token);
+    expect(response.body).toHaveProperty('first_name', 'Fred');
+  });
+});
+
+describe('POST /users', () => {
+  test('successfully creates new user', async () => {
+    const response = await request(app)
+      .post('/users')
+      .send({
+        username: 'bdug',
+        first_name: 'Bobson',
+        last_name: 'Dugnutt',
+        password: 'password',
+        email: 'email@ermail.com'
+      });
+    expect(response.body).toHaveProperty('first_name', 'Bobson');
   });
 });
 

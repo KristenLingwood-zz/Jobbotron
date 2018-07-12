@@ -50,20 +50,6 @@
       "examples": ["lastchristmas"],
       "minLength": 1,
       "maxLength": 55
-    },
-    "employees:": {
-      "$id": "/properties/employees",
-      "type": "array",
-      "title": "The employees Schema ",
-      "default": [],
-      "examples": []
-    },
-    "jobs:": {
-      "$id": "/properties/jobs",
-      "type": "array",
-      "title": "The jobs Schema ",
-      "default": [],
-      "examples": []
     }
   },
   "required": ["name", "email", "handle", "password"]

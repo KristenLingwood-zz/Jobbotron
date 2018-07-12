@@ -19,7 +19,6 @@ router.get('', ensureLoggedIn, async (req, res, next) => {
     const offset = req.query.offset || 0;
     let data;
     if (!req.query.search) {
-      console.log('before query');
       data = await db.query(
         `SELECT name, companies.email, handle, logo, array_agg(jobs.id) as jobs, array_agg(users.username) as employees
         FROM companies
@@ -45,11 +44,10 @@ router.get('', ensureLoggedIn, async (req, res, next) => {
         [req.query.search, limit, offset]
       );
     }
-    console.log('data:');
     return res.json(data.rows);
   } catch (err) {
-    err = new APIError(500, 'Bad Request', 'Invalid Query');
-    return next(err);
+    const apiErr = new APIError(500, 'Bad Request', 'Invalid Query');
+    return next(apiErr);
   }
 });
 
@@ -81,8 +79,14 @@ router.post('', async function(req, res, next) {
     }
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
-      `INSERT INTO companies (name, logo, handle, password) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [req.body.name, req.body.logo, req.body.handle, hashedPassword]
+      `INSERT INTO companies (name, logo, email, handle, password) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [
+        req.body.name,
+        req.body.logo,
+        req.body.email,
+        req.body.handle,
+        hashedPassword
+      ]
     );
     return res.json(data.rows[0]);
   } catch (err) {
@@ -102,11 +106,15 @@ router.patch('/:handle', ensureCorrectCompany, async (req, res, next) => {
     ]);
     let name = req.body.name || oldData.rows[0].name;
     let logo = req.body.logo || oldData.rows[0].logo || null;
-    let password =
-      (await bcrypt.hash(req.body.password, 10)) || oldData.rows[0].password;
+    let handle = req.body.handle || oldData.rows[0].handle;
+    let email = req.body.email || oldData.rows[0].email;
+    let password = oldData.rows[0].password;
+    if (req.body.password) {
+      password = await bcrypt.hash(req.body.password, 10);
+    }
     const data = await db.query(
-      'UPDATE companies SET name=$1, logo=$2, password=$3 WHERE handle=$4 RETURNING *',
-      [name, logo, password, req.params.handle]
+      'UPDATE companies SET name=$1, logo=$2, password=$3, email=$4, handle=$5 WHERE handle=$6 RETURNING *',
+      [name, logo, password, email, handle, oldData.rows[0].handle]
     );
     return res.json(data.rows[0]);
   } catch (err) {

@@ -62,7 +62,7 @@ router.patch('/:id', async (req, res, next) => {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     if (currentCompany.rows[0].company !== decodedToken.handle) {
-      return res.json({ message: 'Unauthorized -- wrong company' });
+      return res.status(403).json({ message: 'Unauthorized -- wrong company' });
     }
     const oldData = await db.query('SELECT * FROM jobs WHERE id=$1', [
       req.params.id
@@ -90,7 +90,7 @@ router.delete('/:id', async (req, res, next) => {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     if (currentCompany.rows[0].company !== decodedToken.handle) {
-      return res.json({ message: 'Unauthorized -- wrong company' });
+      return res.status(403).json({ message: 'Unauthorized -- wrong company' });
     }
     await db.query('DELETE FROM jobs WHERE id=$1', [req.params.id]);
     return res.json({ message: 'Job deleted' });

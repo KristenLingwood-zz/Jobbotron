@@ -15,11 +15,13 @@ function ensureCompanyAcct(req, res, next) {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     if (decodedToken.acctType === 'individual') {
-      return res.json({ message: 'Unauthorized -- not a company account' });
+      return res
+        .status(403)
+        .json({ message: 'Unauthorized -- not a company account' });
     }
     return next();
   } catch (err) {
-    return res.json({ message: 'Unauthorized -- not logged in' });
+    return res.status(401).json({ message: 'Unauthorized -- not logged in' });
   }
 }
 
@@ -28,7 +30,7 @@ function ensureCorrectUser(req, res, next) {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     if (decodedToken.acctType === 'company') {
-      return res.json({
+      return res.status(403).json({
         message: 'Unauthorized -- not an individual user account'
       });
     }
@@ -41,7 +43,9 @@ function ensureCorrectUser(req, res, next) {
         'params username:',
         req.params.username
       );
-      return res.json({ message: 'Unauthorized -- incorrect user' });
+      return res
+        .status(403)
+        .json({ message: 'Unauthorized -- incorrect user' });
     }
   } catch (err) {
     console.log(err);
@@ -54,11 +58,16 @@ function ensureCorrectCompany(req, res, next) {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     if (decodedToken.acctType === 'individual') {
-      return res.json({ message: 'Unauthorized -- not a company account' });
+      return res
+        .status(403)
+        .json({ message: 'Unauthorized -- not a company account' });
     }
-    if (decodedToken.id === +req.params.id) {
+    if (decodedToken.handle === req.params.handle) {
       return next();
-    } else return res.json({ message: 'Unauthorized -- incorrect company' });
+    } else
+      return res
+        .status(403)
+        .json({ message: 'Unauthorized -- incorrect company' });
   } catch (err) {
     return next(err);
   }
