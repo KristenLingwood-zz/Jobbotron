@@ -42,7 +42,7 @@ beforeEach(async () => {
   // do the same for company "companies"
   const hashedCompanyPassword = await bcrypt.hash('secret', 1);
   const companyData = await db.query(
-    "INSERT INTO companies (name, handle, password, email) VALUES ('Test Co', 'testcompany', $1, 'email@email.com') RETURNING *",
+    "INSERT INTO companies (name, handle, email, password) VALUES ('Test Co', 'testcompany', 'email@email.com', $1) RETURNING *",
     [hashedCompanyPassword]
   );
   const companyResponse = await request(app)
@@ -53,84 +53,76 @@ beforeEach(async () => {
     });
   auth.company_token = companyResponse.body.token;
   auth.current_current_company = jwt.decode(auth.company_token).current_company;
-
-  // login a user, get a token, store the user ID and token
-  const hashedPassword = await bcrypt.hash('secret', 1);
-  await db.query(
-    "INSERT INTO users (username, first_name, last_name, email, password, current_company) VALUES ('test', 'Fred', 'Durst', 'fred@test.com', $1, $2)",
-    [hashedPassword, companyData.rows[0].current_company]
-  );
-  const response = await request(app)
-    .post('/user-auth')
-    .send({
-      username: 'test',
-      password: 'secret'
-    });
-  auth.token = response.body.token;
-  auth.current_username = jwt.decode(auth.token).username;
 });
 
-describe('GET /users', () => {
-  test('gets a list of users', async () => {
+describe('GET /companies', () => {
+  test('Gets a list of companies', async () => {
     const response = await request(app)
-      .get('/users')
-      .set('authorization', auth.token);
+      .get('/companies')
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
     expect(response.body).toHaveLength(1);
   });
-});
-
-describe('GET /users/:username', () => {
-  test('successfully get a single user', async () => {
-    const response = await request(app)
-      .get('/users/test')
-      .set('authorization', auth.token);
-    expect(response.body).toHaveProperty('first_name', 'Fred');
+  test('get unauth error without token', async () => {
+    const response = await request(app).get('/companies');
+    expect(response.status).toBe(401);
   });
 });
 
-describe('POST /users', () => {
-  test('successfully creates new user', async () => {
+describe('GET /companies/:handle', () => {
+  test('Gets a single company', async () => {
     const response = await request(app)
-      .post('/users')
+      .get('/companies/testcompany')
+      .set('authorization', auth.company_token);
+    expect(response.body).toHaveProperty('handle', 'testcompany');
+  });
+  test('get unauth error without token', async () => {
+    const response = await request(app).get('/companies/testcompany');
+    expect(response.status).toBe(401);
+  });
+});
+
+describe('POST /companies', () => {
+  test('successfully creates new company', async () => {
+    const response = await request(app)
+      .post('/companies')
       .send({
-        username: 'bdug',
-        first_name: 'Bobson',
-        last_name: 'Dugnutt',
+        handle: 'awesomeinc',
+        name: 'Awesome, Inc.',
         password: 'password',
         email: 'email@ermail.com'
       });
-    expect(response.body).toHaveProperty('first_name', 'Bobson');
+    expect(response.body).toHaveProperty('handle', 'awesomeinc');
   });
 });
 
-describe('PATCH /users/:username', () => {
-  test('successfully patches own user', async () => {
+describe('PATCH /companies/:handle', () => {
+  test('successfully patches own company', async () => {
     const response = await request(app)
-      .patch('/users/test')
-      .set('authorization', auth.token)
+      .patch('/companies/testcompany')
+      .set('authorization', auth.company_token)
       .send({
-        username: 'fdurst',
-        first_name: 'Frid'
+        handle: 'bestcompany',
+        name: 'Best Co.'
       });
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('username', 'fdurst');
-    expect(response.body).toHaveProperty('first_name', 'Frid');
+    // expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('handle', 'bestcompany');
+    expect(response.body).toHaveProperty('name', 'Best Co.');
   });
 });
 
-describe('DELETE /users/:username', () => {
-  test('successfully deletes own user', async () => {
+describe('DELETE /companies/:handle', () => {
+  test('successfully deletes own company', async () => {
     const response = await request(app)
-      .delete(`/users/${auth.current_username}`)
-      .set('authorization', auth.token);
+      .delete(`/companies/testcompany`)
+      .set('authorization', auth.company_token);
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'User deleted' });
+    expect(response.body).toEqual({ message: 'Company deleted' });
   });
 });
 
 afterEach(async () => {
-  //delete the users and company users
-  await db.query('DELETE FROM users');
+  //delete the companies
   await db.query('DELETE FROM companies');
 });
 

@@ -1,5 +1,3 @@
-// my beforeEach user/company inserts will need more fields as I had more required fields
-
 process.env.NODE_ENV - 'test';
 const db = require('../db');
 const request = require('supertest');
@@ -68,65 +66,70 @@ beforeEach(async () => {
     });
   auth.token = response.body.token;
   auth.current_username = jwt.decode(auth.token).username;
+
+  await db.query(
+    "INSERT INTO jobs (title, salary, equity, company) VALUES ('well-compensated narcissist', 100000, 99, 'testcompany')"
+  );
 });
 
-describe('GET /users', () => {
-  test('gets a list of users', async () => {
+describe('GET /jobs', () => {
+  test('gets a list of jobs', async () => {
     const response = await request(app)
-      .get('/users')
+      .get('/jobs')
       .set('authorization', auth.token);
     expect(response.body).toHaveLength(1);
   });
 });
 
-describe('GET /users/:username', () => {
-  test('successfully get a single user', async () => {
+describe('GET /jobs/:id', () => {
+  test('successfully get a single job', async () => {
     const response = await request(app)
-      .get('/users/test')
+      .get('/jobs/2')
       .set('authorization', auth.token);
-    expect(response.body).toHaveProperty('first_name', 'Fred');
+    expect(response.body).toHaveProperty('salary', 100000);
   });
 });
 
-describe('POST /users', () => {
-  test('successfully creates new user', async () => {
+describe('POST /jobs', () => {
+  test('successfully creates a new job', async () => {
     const response = await request(app)
-      .post('/users')
+      .post('/jobs')
+      .set('authorization', auth.company_token)
       .send({
-        username: 'bdug',
-        first_name: 'Bobson',
-        last_name: 'Dugnutt',
-        password: 'password',
-        email: 'email@ermail.com'
+        title: 'mook',
+        salary: 5,
+        company: 'testcompany'
       });
-    expect(response.body).toHaveProperty('first_name', 'Bobson');
+    expect(response.body).toHaveProperty('title', 'mook');
   });
 });
 
-describe('PATCH /users/:username', () => {
-  test('successfully patches own user', async () => {
+describe('PATCH /jobs/:id', () => {
+  test('successfully patches own job', async () => {
     const response = await request(app)
-      .patch('/users/test')
-      .set('authorization', auth.token)
+      .patch('/jobs/4')
+      .set('authorization', auth.company_token)
       .send({
-        username: 'fdurst',
-        first_name: 'Frid'
+        salary: 6
       });
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('username', 'fdurst');
-    expect(response.body).toHaveProperty('first_name', 'Frid');
+    expect(response.body).toHaveProperty(
+      'title',
+      'well-compensated narcissist'
+    );
+    expect(response.body).toHaveProperty('salary', 6);
   });
 });
 
-describe('DELETE /users/:username', () => {
-  test('successfully deletes own user', async () => {
-    const response = await request(app)
-      .delete(`/users/${auth.current_username}`)
-      .set('authorization', auth.token);
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ message: 'User deleted' });
-  });
-});
+// describe('DELETE /users/:username', () => {
+//   test('successfully deletes own user', async () => {
+//     const response = await request(app)
+//       .delete(`/users/${auth.current_username}`)
+//       .set('authorization', auth.token);
+//     expect(response.status).toBe(200);
+//     expect(response.body).toEqual({ message: 'User deleted' });
+//   });
+// });
 
 afterEach(async () => {
   //delete the users and company users

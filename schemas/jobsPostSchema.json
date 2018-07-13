@@ -24,7 +24,14 @@
       "title": "The Equity Schema ",
       "default": 0,
       "examples": [70]
+    },
+    "company": {
+      "$id": "/properties/company",
+      "type": "string",
+      "title": "The company Schema ",
+      "default": "",
+      "examples": ["RithmSkool"]
     }
   },
-  "required": ["title", "salary"]
+  "required": ["title", "salary", "company"]
 }

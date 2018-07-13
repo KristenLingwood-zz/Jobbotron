@@ -28,6 +28,25 @@
       "default": "",
       "examples": ["lastchristmas"],
       "minLength": 1
+    },
+    "email": {
+      "$id": "/properties/email",
+      "type": "string",
+      "format": "email",
+      "title": "The Email Schema ",
+      "default": "",
+      "examples": ["smd@email.com"],
+      "minLength": 6,
+      "maxLength": 60
+    },
+    "handle": {
+      "$id": "/properties/handle",
+      "type": "string",
+      "title": "The Handle Schema ",
+      "default": "",
+      "examples": ["nakatomi"],
+      "minLength": 1,
+      "maxLength": 55
     }
   },
   "required": []

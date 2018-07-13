@@ -10,14 +10,44 @@ const {
 const { validate } = require('jsonschema');
 const companiesPostSchema = require('../schemas/companiesPostSchema.json');
 const companiesPatchSchema = require('../schemas/companiesPatchSchema.json');
+const APIError = require('../APIError');
 
 // GET /companies
 router.get('', ensureLoggedIn, async (req, res, next) => {
   try {
-    const data = await db.query('SELECT * FROM companies');
+    const limit = !req.query.limit ? 50 : Math.min(req.query.limit, 50);
+    const offset = req.query.offset || 0;
+    let data;
+    if (!req.query.search) {
+      data = await db.query(
+        `SELECT name, companies.email, handle, logo, array_agg(jobs.id) as jobs, array_agg(users.username) as employees
+        FROM companies
+        LEFT OUTER JOIN jobs
+        ON (companies.handle = jobs.company)
+        LEFT OUTER JOIN users
+        ON (users.current_company = companies.handle)
+        GROUP BY (handle, name, companies.email, logo)
+        LIMIT $1 OFFSET $2;`,
+        [limit, offset]
+      );
+    } else {
+      data = await db.query(
+        `SELECT name, companies.email, handle, logo, array_agg(jobs.id) as jobs, array_agg(users.username) as employees
+        FROM companies
+        LEFT OUTER JOIN jobs
+        ON (companies.handle = jobs.company)
+        LEFT OUTER JOIN users
+        ON (users.current_company = companies.handle)
+        WHERE handle ILIKE $1
+        GROUP BY (handle, name, companies.email, logo)
+        LIMIT $2 OFFSET $3;`,
+        [req.query.search, limit, offset]
+      );
+    }
     return res.json(data.rows);
   } catch (err) {
-    return next(err);
+    const apiErr = new APIError(500, 'Bad Request', 'Invalid Query');
+    return next(apiErr);
   }
 });
 
@@ -49,39 +79,16 @@ router.post('', async function(req, res, next) {
     }
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
-      `INSERT INTO companies (name, logo, handle, password) VALUES ($1, $2, $3, $4) RETURNING *`,
-      [req.body.name, req.body.logo, req.body.handle, hashedPassword]
+      `INSERT INTO companies (name, logo, email, handle, password) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [
+        req.body.name,
+        req.body.logo,
+        req.body.email,
+        req.body.handle,
+        hashedPassword
+      ]
     );
     return res.json(data.rows[0]);
-  } catch (err) {
-    return next(err);
-  }
-});
-
-// POST /companies/auth
-router.post('/auth', async (req, res, next) => {
-  try {
-    const companyData = await db.query(
-      'SELECT * FROM companies WHERE handle=$1',
-      [req.body.handle]
-    );
-    if (companyData.rows.length === 0)
-      return res.json({ message: 'Invalid company handle' });
-
-    const result = await bcrypt.compare(
-      req.body.password,
-      companyData.rows[0].password
-    );
-    if (!result) return res.json({ message: 'Invalid password' });
-
-    const token = jsonwebtoken.sign(
-      {
-        handle: companyData.rows[0].handle,
-        acctType: 'company'
-      },
-      'CONTIGO'
-    );
-    return res.json({ token });
   } catch (err) {
     return next(err);
   }
@@ -99,11 +106,15 @@ router.patch('/:handle', ensureCorrectCompany, async (req, res, next) => {
     ]);
     let name = req.body.name || oldData.rows[0].name;
     let logo = req.body.logo || oldData.rows[0].logo || null;
-    let password =
-      (await bcrypt.hash(req.body.password, 10)) || oldData.rows[0].password;
+    let handle = req.body.handle || oldData.rows[0].handle;
+    let email = req.body.email || oldData.rows[0].email;
+    let password = oldData.rows[0].password;
+    if (req.body.password) {
+      password = await bcrypt.hash(req.body.password, 10);
+    }
     const data = await db.query(
-      'UPDATE companies SET name=$1, logo=$2, password=$3 WHERE handle=$4 RETURNING *',
-      [name, logo, password, req.params.handle]
+      'UPDATE companies SET name=$1, logo=$2, password=$3, email=$4, handle=$5 WHERE handle=$6 RETURNING *',
+      [name, logo, password, email, handle, oldData.rows[0].handle]
     );
     return res.json(data.rows[0]);
   } catch (err) {

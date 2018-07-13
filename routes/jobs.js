@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/index');
 const jsonwebtoken = require('jsonwebtoken');
-const { ensureLoggedIn, ensureCompanyAcct } = require('../middleware/auth.js');
+const {
+  ensureLoggedIn,
+  ensureCompanyAcct,
+  ensureCorrectCompany
+} = require('../middleware/auth.js');
 const { validate } = require('jsonschema');
 const jobsPostSchema = require('../schemas/jobsPostSchema.json');
 const jobsPatchSchema = require('../schemas/jobsPatchSchema.json');
@@ -30,6 +34,7 @@ router.post('', ensureCompanyAcct, async (req, res, next) => {
 router.get('', ensureLoggedIn, async (req, res, next) => {
   try {
     const data = await db.query('SELECT * FROM jobs');
+    console.log(data.rows);
     return res.json(data.rows);
   } catch (err) {
     return next(err);
@@ -49,7 +54,7 @@ router.get('/:id', ensureLoggedIn, async (req, res, next) => {
 });
 
 // PATCH /jobs/:id
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', ensureCorrectCompany, async (req, res, next) => {
   try {
     const result = validate(req.body, jobsPatchSchema);
     if (!result.valid) {
@@ -62,7 +67,7 @@ router.patch('/:id', async (req, res, next) => {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     if (currentCompany.rows[0].company !== decodedToken.handle) {
-      return res.json({ message: 'Unauthorized -- wrong company' });
+      return res.status(403).json({ message: 'Unauthorized -- wrong company' });
     }
     const oldData = await db.query('SELECT * FROM jobs WHERE id=$1', [
       req.params.id
@@ -90,7 +95,7 @@ router.delete('/:id', async (req, res, next) => {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     if (currentCompany.rows[0].company !== decodedToken.handle) {
-      return res.json({ message: 'Unauthorized -- wrong company' });
+      return res.status(403).json({ message: 'Unauthorized -- wrong company' });
     }
     await db.query('DELETE FROM jobs WHERE id=$1', [req.params.id]);
     return res.json({ message: 'Job deleted' });
