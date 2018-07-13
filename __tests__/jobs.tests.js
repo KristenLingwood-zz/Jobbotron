@@ -175,6 +175,34 @@ describe('POST/GET /jobs/:id/applications', () => {
   });
 });
 
+describe('GET /jobs/:id/applications/:app_id', () => {
+  test('see own job', async () => {
+    const response = await request(app)
+      .post(`/jobs/10/applications`)
+      .set('authorization', auth.token);
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty(
+      'message',
+      'Application received for job #10'
+    );
+    const userResponse = await request(app)
+      .get('/jobs/10/applications/2')
+      .set('authorization', auth.token);
+    expect(userResponse.status).toBe(200);
+    expect(userResponse.body).toHaveProperty('id', 2);
+    const companyResponse = await request(app)
+      .get('/jobs/10/applications/2')
+      .set('authorization', auth.company_token);
+    expect(companyResponse.status).toBe(200);
+    expect(companyResponse.body).toHaveProperty('id', 2);
+    const delResponse = await request(app)
+      .delete('/jobs/10/applications/2')
+      .set('authorization', auth.token);
+    expect(delResponse.status).toBe(200);
+    expect(delResponse.body).toHaveProperty('message', 'Application deleted');
+  });
+});
+
 afterEach(async () => {
   //delete the users and company users
   await db.query('DELETE FROM users');

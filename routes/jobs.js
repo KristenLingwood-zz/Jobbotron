@@ -171,4 +171,74 @@ router.get('/:id/applications', async (req, res, next) => {
   }
 });
 
+// GET single application
+router.get('/:id/applications/:app_id', async (req, res, next) => {
+  try {
+    const token = req.headers.authorization;
+    const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
+    if (decodedToken.acctType === 'company') {
+      const data = await db.query(`SELECT company FROM jobs WHERE id=$1`, [
+        req.params.id
+      ]);
+      if (data.rows[0].company !== decodedToken.handle) {
+        return res
+          .status(403)
+          .json({ message: 'Unauthorized -- incorrect company' });
+      }
+    } else {
+      //if acct individual
+      // decodedToken.id
+      const data = await db.query(
+        `SELECT user_id FROM jobs_users WHERE id=$1`,
+        [req.params.app_id]
+      );
+      if (data.rows[0].user_id !== decodedToken.id) {
+        return res
+          .status(403)
+          .json({ message: 'Unauthorized -- incorrect user' });
+      }
+    }
+    const appData = await db.query(`SELECT * FROM jobs_users WHERE id=$1`, [
+      req.params.app_id
+    ]);
+    return res.json(appData.rows[0]);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// DELETE single application
+router.delete('/:id/applications/:app_id', async (req, res, next) => {
+  try {
+    const token = req.headers.authorization;
+    const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
+    if (decodedToken.acctType === 'company') {
+      const data = await db.query(`SELECT company FROM jobs WHERE id=$1`, [
+        req.params.id
+      ]);
+      if (data.rows[0].company !== decodedToken.handle) {
+        return res
+          .status(403)
+          .json({ message: 'Unauthorized -- incorrect company' });
+      }
+    } else {
+      //if acct individual
+      // decodedToken.id
+      const data = await db.query(
+        `SELECT user_id FROM jobs_users WHERE id=$1`,
+        [req.params.app_id]
+      );
+      if (data.rows[0].user_id !== decodedToken.id) {
+        return res
+          .status(403)
+          .json({ message: 'Unauthorized -- incorrect user' });
+      }
+    }
+    await db.query(`DELETE FROM jobs_users WHERE id=$1`, [req.params.app_id]);
+    return res.json({ message: 'Application deleted' });
+  } catch (err) {
+    return next(err);
+  }
+});
+
 module.exports = router;
