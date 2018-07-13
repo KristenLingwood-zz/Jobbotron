@@ -64,10 +64,12 @@ function ensureCorrectCompany(req, res, next) {
     }
     if (decodedToken.handle === req.params.handle) {
       return next();
-    } else
+    } else {
+      console.log('marco');
       return res
         .status(403)
         .json({ message: 'Unauthorized -- incorrect company' });
+    }
   } catch (err) {
     return next(err);
   }

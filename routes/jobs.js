@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/index');
 const jsonwebtoken = require('jsonwebtoken');
-const { ensureLoggedIn, ensureCompanyAcct } = require('../middleware/auth.js');
+const {
+  ensureLoggedIn,
+  ensureCompanyAcct,
+  ensureCorrectCompany
+} = require('../middleware/auth.js');
 const { validate } = require('jsonschema');
 const jobsPostSchema = require('../schemas/jobsPostSchema.json');
 const jobsPatchSchema = require('../schemas/jobsPatchSchema.json');
@@ -30,6 +34,7 @@ router.post('', ensureCompanyAcct, async (req, res, next) => {
 router.get('', ensureLoggedIn, async (req, res, next) => {
   try {
     const data = await db.query('SELECT * FROM jobs');
+    console.log(data.rows);
     return res.json(data.rows);
   } catch (err) {
     return next(err);
@@ -49,7 +54,7 @@ router.get('/:id', ensureLoggedIn, async (req, res, next) => {
 });
 
 // PATCH /jobs/:id
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', ensureCorrectCompany, async (req, res, next) => {
   try {
     const result = validate(req.body, jobsPatchSchema);
     if (!result.valid) {
