@@ -102,12 +102,22 @@ describe('POST /jobs', () => {
       });
     expect(response.body).toHaveProperty('title', 'mook');
   });
+  test('returns 400 bad request', async () => {
+    const response = await request(app)
+      .post('/jobs')
+      .set('authorization', auth.company_token)
+      .send({
+        title: 'trombone player'
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toHaveProperty('title', 'Bad Request');
+  });
 });
 
 describe('PATCH /jobs/:id', () => {
   test('successfully patches own job', async () => {
     const response = await request(app)
-      .patch('/jobs/5')
+      .patch('/jobs/6')
       .set('authorization', auth.company_token)
       .send({
         salary: 6
@@ -119,12 +129,22 @@ describe('PATCH /jobs/:id', () => {
     );
     expect(response.body).toHaveProperty('salary', 6);
   });
+  test('returns 400 bad request', async () => {
+    const response = await request(app)
+      .patch('/jobs/6')
+      .set('authorization', auth.company_token)
+      .send({
+        foo: 'bar'
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toHaveProperty('title', 'Bad Request');
+  });
 });
 
 describe('DELETE /jobs/:id', () => {
   test('successfully deletes own job', async () => {
     const response = await request(app)
-      .delete(`/jobs/6`)
+      .delete(`/jobs/8`)
       .set('authorization', auth.company_token);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: 'Job deleted' });

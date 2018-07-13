@@ -12,14 +12,25 @@ const APIError = require('../APIError');
 // POST /users
 router.post('', async (req, res, next) => {
   try {
-    console.log('WOMP WOMP ROUTE');
     const validation = validate(req.body, usersPostSchema);
-    console.log('validation length:', validation.errors.length);
     if (!validation.valid) {
       return next(
         new APIError(
           400,
           'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
+    }
+    const existingUser = await db.query(
+      'SELECT username FROM users WHERE username=$1',
+      [req.body.username]
+    );
+    if (existingUser.rows.length > 0) {
+      return next(
+        new APIError(
+          409,
+          'Conflict',
           validation.errors.map(e => e.stack).join('. ')
         )
       );
@@ -93,16 +104,33 @@ router.get('/:username', ensureLoggedIn, async (req, res, next) => {
   }
 });
 
-// edit co handle
-// edit username
-
 // PATCH /users/:username
 router.patch('/:username', ensureCorrectUser, async (req, res, next) => {
   try {
-    const result = validate(req.body, usersPatchSchema);
-    if (!result.valid) {
-      return next(result.errors);
+    const validation = validate(req.body, usersPatchSchema);
+    if (!validation.valid) {
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
+    const existingUser = await db.query(
+      'SELECT username FROM users WHERE username=$1',
+      [req.body.username]
+    );
+    if (existingUser.rows.length > 0) {
+      return next(
+        new APIError(
+          409,
+          'Conflict',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
+    }
+
     const oldData = await db.query('SELECT * FROM users WHERE username=$1', [
       req.params.username
     ]);
@@ -144,7 +172,6 @@ router.delete('/:username', ensureCorrectUser, async (req, res, next) => {
     ]);
     return res.json({ message: 'User deleted' });
   } catch (err) {
-    console.log(err);
     return next(err);
   }
 });

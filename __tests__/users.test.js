@@ -110,6 +110,19 @@ describe('POST /users', () => {
     expect(response.status).toBe(400);
     expect(response.body.error).toHaveProperty('title', 'Bad Request');
   });
+  test('returns 409 conflict', async () => {
+    const response = await request(app)
+      .post('/users')
+      .send({
+        username: 'test',
+        first_name: 'Bobson',
+        last_name: 'Dugnutt',
+        password: 'password',
+        email: 'email@ermail.com'
+      });
+    expect(response.status).toBe(409);
+    expect(response.body.error).toHaveProperty('title', 'Conflict');
+  });
 });
 
 describe('PATCH /users/:username', () => {
@@ -121,9 +134,28 @@ describe('PATCH /users/:username', () => {
         username: 'fdurst',
         first_name: 'Frid'
       });
-    expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('username', 'fdurst');
     expect(response.body).toHaveProperty('first_name', 'Frid');
+  });
+  test('returns 400 bad request', async () => {
+    const response = await request(app)
+      .patch('/users/test')
+      .set('authorization', auth.token)
+      .send({
+        foo: 'bar'
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toHaveProperty('title', 'Bad Request');
+  });
+  test('returns 409 conflict', async () => {
+    const response = await request(app)
+      .patch('/users/test')
+      .set('authorization', auth.token)
+      .send({
+        username: 'test'
+      });
+    expect(response.status).toBe(409);
+    expect(response.body.error).toHaveProperty('title', 'Conflict');
   });
 });
 

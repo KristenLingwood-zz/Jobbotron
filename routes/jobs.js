@@ -10,13 +10,20 @@ const {
 const { validate } = require('jsonschema');
 const jobsPostSchema = require('../schemas/jobsPostSchema.json');
 const jobsPatchSchema = require('../schemas/jobsPatchSchema.json');
+const APIError = require('../APIError');
 
 // POST /jobs
 router.post('', ensureCompanyAcct, async (req, res, next) => {
   try {
-    const result = validate(req.body, jobsPostSchema);
-    if (!result.valid) {
-      return next(result.errors);
+    const validation = validate(req.body, jobsPostSchema);
+    if (!validation.valid) {
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
@@ -34,7 +41,6 @@ router.post('', ensureCompanyAcct, async (req, res, next) => {
 router.get('', ensureLoggedIn, async (req, res, next) => {
   try {
     const data = await db.query('SELECT * FROM jobs');
-    console.log(data.rows);
     return res.json(data.rows);
   } catch (err) {
     return next(err);
@@ -56,17 +62,21 @@ router.get('/:id', ensureLoggedIn, async (req, res, next) => {
 // PATCH /jobs/:id
 router.patch('/:id', async (req, res, next) => {
   try {
-    const result = validate(req.body, jobsPatchSchema);
-    if (!result.valid) {
-      return next(result.errors.map(e => e.stack));
+    const validation = validate(req.body, jobsPatchSchema);
+    if (!validation.valid) {
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
     const found_job = await db.query('SELECT * FROM jobs WHERE id = $1', [
       req.params.id
     ]);
-    console.log('decoded token', decodedToken);
-    console.log('found_job', found_job.rows[0]);
     if (decodedToken.handle !== found_job.rows[0].company) {
       return res.status(403).json({ message: 'Unauthorized -- wrong company' });
     }

@@ -37,18 +37,11 @@ function ensureCorrectUser(req, res, next) {
     if (decodedToken.username === req.params.username) {
       return next();
     } else {
-      console.log(
-        'decoded username:',
-        decodedToken.username,
-        'params username:',
-        req.params.username
-      );
       return res
         .status(403)
         .json({ message: 'Unauthorized -- incorrect user' });
     }
   } catch (err) {
-    console.log(err);
     return next(err);
   }
 }
@@ -65,7 +58,6 @@ function ensureCorrectCompany(req, res, next) {
     if (decodedToken.handle === req.params.handle) {
       return next();
     } else {
-      console.log('marco');
       return res
         .status(403)
         .json({ message: 'Unauthorized -- incorrect company' });

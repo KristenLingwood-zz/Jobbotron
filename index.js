@@ -51,7 +51,7 @@ app.use((error, request, response, next) => {
   console.log(error);
   // log the error stack if we're in development
 
-  console.error(error.stack); //eslint-disable-line no-console
+  // console.error(error.stack); //eslint-disable-line no-console
 
   return response.status(error.status).json(error);
 });
