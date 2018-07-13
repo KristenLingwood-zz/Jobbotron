@@ -94,6 +94,27 @@ describe('POST /companies', () => {
       });
     expect(response.body).toHaveProperty('handle', 'awesomeinc');
   });
+  test('returns 400 bad request', async () => {
+    const response = await request(app)
+      .post('/companies')
+      .send({
+        handle: 'awesomeinc'
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toHaveProperty('title', 'Bad Request');
+  });
+  test('returns 409 conflict', async () => {
+    const response = await request(app)
+      .post('/companies')
+      .send({
+        handle: 'testcompany',
+        name: 'Awesome, Inc.',
+        password: 'password',
+        email: 'email@ermail.com'
+      });
+    expect(response.status).toBe(409);
+    expect(response.body.error).toHaveProperty('title', 'Conflict');
+  });
 });
 
 describe('PATCH /companies/:handle', () => {
@@ -108,6 +129,16 @@ describe('PATCH /companies/:handle', () => {
     // expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('handle', 'bestcompany');
     expect(response.body).toHaveProperty('name', 'Best Co.');
+  });
+  test('returns 409 conflict', async () => {
+    const response = await request(app)
+      .patch('/companies/testcompany')
+      .set('authorization', auth.company_token)
+      .send({
+        handle: 'testcompany'
+      });
+    expect(response.status).toBe(409);
+    expect(response.body.error).toHaveProperty('title', 'Conflict');
   });
 });
 

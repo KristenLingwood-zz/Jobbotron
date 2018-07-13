@@ -102,12 +102,22 @@ describe('POST /jobs', () => {
       });
     expect(response.body).toHaveProperty('title', 'mook');
   });
+  test('returns 400 bad request', async () => {
+    const response = await request(app)
+      .post('/jobs')
+      .set('authorization', auth.company_token)
+      .send({
+        title: 'trombone player'
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toHaveProperty('title', 'Bad Request');
+  });
 });
 
 describe('PATCH /jobs/:id', () => {
   test('successfully patches own job', async () => {
     const response = await request(app)
-      .patch('/jobs/4')
+      .patch('/jobs/6')
       .set('authorization', auth.company_token)
       .send({
         salary: 6
@@ -119,22 +129,85 @@ describe('PATCH /jobs/:id', () => {
     );
     expect(response.body).toHaveProperty('salary', 6);
   });
+  test('returns 400 bad request', async () => {
+    const response = await request(app)
+      .patch('/jobs/6')
+      .set('authorization', auth.company_token)
+      .send({
+        foo: 'bar'
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toHaveProperty('title', 'Bad Request');
+  });
 });
 
-// describe('DELETE /users/:username', () => {
-//   test('successfully deletes own user', async () => {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_username}`)
-//       .set('authorization', auth.token);
-//     expect(response.status).toBe(200);
-//     expect(response.body).toEqual({ message: 'User deleted' });
-//   });
-// });
+describe('DELETE /jobs/:id', () => {
+  test('successfully deletes own job', async () => {
+    const response = await request(app)
+      .delete(`/jobs/8`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Job deleted' });
+  });
+});
+
+describe('POST/GET /jobs/:id/applications', () => {
+  test('successfully adds job application', async () => {
+    const response = await request(app)
+      .post(`/jobs/9/applications`)
+      .set('authorization', auth.token);
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty(
+      'message',
+      'Application received for job #9'
+    );
+    const getResponse = await request(app)
+      .get(`/jobs/9/applications`)
+      .set('authorization', auth.company_token);
+    // expect(response.status).toBe(200);
+    expect(getResponse.body[0]).toHaveProperty('job_id', 9);
+    const getUserResponse = await request(app)
+      .get(`/jobs/9/applications`)
+      .set('authorization', auth.token);
+    // expect(response.status).toBe(200);
+    console.log('FIND ME', getUserResponse);
+    expect(getUserResponse.body[0]).toHaveProperty('job_id', 9);
+  });
+});
+
+describe('GET /jobs/:id/applications/:app_id', () => {
+  test('see own job', async () => {
+    const response = await request(app)
+      .post(`/jobs/10/applications`)
+      .set('authorization', auth.token);
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty(
+      'message',
+      'Application received for job #10'
+    );
+    const userResponse = await request(app)
+      .get('/jobs/10/applications/2')
+      .set('authorization', auth.token);
+    expect(userResponse.status).toBe(200);
+    expect(userResponse.body).toHaveProperty('id', 2);
+    const companyResponse = await request(app)
+      .get('/jobs/10/applications/2')
+      .set('authorization', auth.company_token);
+    expect(companyResponse.status).toBe(200);
+    expect(companyResponse.body).toHaveProperty('id', 2);
+    const delResponse = await request(app)
+      .delete('/jobs/10/applications/2')
+      .set('authorization', auth.token);
+    expect(delResponse.status).toBe(200);
+    expect(delResponse.body).toHaveProperty('message', 'Application deleted');
+  });
+});
 
 afterEach(async () => {
   //delete the users and company users
   await db.query('DELETE FROM users');
   await db.query('DELETE FROM companies');
+  await db.query('DELETE FROM jobs');
 });
 
 afterAll(async () => {

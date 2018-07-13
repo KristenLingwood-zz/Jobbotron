@@ -55,7 +55,14 @@ router.get('', ensureLoggedIn, async (req, res, next) => {
 router.get('/:handle', ensureLoggedIn, async (req, res, next) => {
   try {
     const companyData = await db.query(
-      'SELECT * FROM companies WHERE handle=$1',
+      `SELECT name, companies.email, handle, logo, array_agg(jobs.id) as jobs, array_agg(users.username) as employees
+      FROM companies
+      LEFT OUTER JOIN jobs
+      ON (companies.handle = jobs.company)
+      LEFT OUTER JOIN users
+      ON (users.current_company = companies.handle)
+      WHERE handle=$1
+      GROUP BY (handle, name, companies.email, logo);`,
       [req.params.handle]
     );
     const userData = await db.query(
@@ -73,10 +80,30 @@ router.get('/:handle', ensureLoggedIn, async (req, res, next) => {
 // POST /companies
 router.post('', async function(req, res, next) {
   try {
-    const result = validate(req.body, companiesPostSchema);
-    if (!result.valid) {
-      return next(result.errors);
+    const validation = validate(req.body, companiesPostSchema);
+    if (!validation.valid) {
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
+    const existingCompany = await db.query(
+      'SELECT handle FROM companies WHERE handle=$1',
+      [req.body.handle]
+    );
+    if (existingCompany.rows.length > 0) {
+      return next(
+        new APIError(
+          409,
+          'Conflict',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const data = await db.query(
       `INSERT INTO companies (name, logo, email, handle, password) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
@@ -97,9 +124,28 @@ router.post('', async function(req, res, next) {
 // PATCH /companies/:handle
 router.patch('/:handle', ensureCorrectCompany, async (req, res, next) => {
   try {
-    const result = validate(req.body, companiesPatchSchema);
-    if (!result.valid) {
-      return next(result.errors);
+    const validation = validate(req.body, companiesPatchSchema);
+    if (!validation.valid) {
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
+    }
+    const existingCompany = await db.query(
+      'SELECT handle FROM companies WHERE handle=$1',
+      [req.body.handle]
+    );
+    if (existingCompany.rows.length > 0) {
+      return next(
+        new APIError(
+          409,
+          'Conflict',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const oldData = await db.query('SELECT * FROM companies WHERE handle=$1', [
       req.params.handle

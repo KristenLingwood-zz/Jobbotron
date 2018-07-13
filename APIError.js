@@ -3,7 +3,7 @@
 class APIError extends Error {
   constructor(
     status = 500,
-    title = 'Internale Server Error',
+    title = 'Internal Server Error',
     message = 'Something bad happened.'
   ) {
     super(message); //call parent class constructor (error) with message

@@ -12,13 +12,13 @@ router.post('/company-auth', async (req, res, next) => {
       [req.body.handle]
     );
     if (companyData.rows.length === 0)
-      return res.json({ message: 'Invalid company handle' });
+      return res.status(400).json({ message: 'Invalid company handle' });
 
     const result = await bcrypt.compare(
       req.body.password,
       companyData.rows[0].password
     );
-    if (!result) return res.json({ message: 'Invalid password' });
+    if (!result) return res.status(400).json({ message: 'Invalid password' });
 
     const token = jsonwebtoken.sign(
       {
@@ -40,16 +40,17 @@ router.post('/user-auth', async (req, res, next) => {
       req.body.username
     ]);
     if (userData.rows.length === 0)
-      return res.json({ message: 'Invalid username' });
+      return res.status(400).json({ message: 'Invalid username' });
 
     const result = await bcrypt.compare(
       req.body.password,
       userData.rows[0].password
     );
-    if (!result) return res.json({ message: 'Invalid password' });
+    if (!result) return res.status(400).json({ message: 'Invalid password' });
 
     const token = jsonwebtoken.sign(
       {
+        id: userData.rows[0].id,
         username: userData.rows[0].username,
         acctType: 'individual'
       },
