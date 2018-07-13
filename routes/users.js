@@ -3,17 +3,26 @@ const router = express.Router();
 const db = require('../db/index');
 const bcrypt = require('bcrypt');
 const jsonwebtoken = require('jsonwebtoken');
-const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth.js');
+const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth');
 const { validate } = require('jsonschema');
-const usersPostSchema = require('../schemas/usersPostSchema.json');
-const usersPatchSchema = require('../schemas/usersPatchSchema.json');
+const usersPostSchema = require('../schemas/usersPostSchema');
+const usersPatchSchema = require('../schemas/usersPatchSchema');
+const APIError = require('../APIError');
 
 // POST /users
 router.post('', async (req, res, next) => {
   try {
-    const result = validate(req.body, usersPostSchema);
-    if (!result.valid) {
-      return next(result.errors);
+    console.log('WOMP WOMP ROUTE');
+    const validation = validate(req.body, usersPostSchema);
+    console.log('validation length:', validation.errors.length);
+    if (!validation.valid) {
+      return next(
+        new APIError(
+          400,
+          'Bad Request',
+          validation.errors.map(e => e.stack).join('. ')
+        )
+      );
     }
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const userData = await db.query(

@@ -54,21 +54,23 @@ router.get('/:id', ensureLoggedIn, async (req, res, next) => {
 });
 
 // PATCH /jobs/:id
-router.patch('/:id', ensureCorrectCompany, async (req, res, next) => {
+router.patch('/:id', async (req, res, next) => {
   try {
     const result = validate(req.body, jobsPatchSchema);
     if (!result.valid) {
-      return next(result.errors);
+      return next(result.errors.map(e => e.stack));
     }
-    const currentCompany = await db.query(
-      'SELECT company FROM jobs WHERE id=$1',
-      [req.params.id]
-    );
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
-    if (currentCompany.rows[0].company !== decodedToken.handle) {
+    const found_job = await db.query('SELECT * FROM jobs WHERE id = $1', [
+      req.params.id
+    ]);
+    console.log('decoded token', decodedToken);
+    console.log('found_job', found_job.rows[0]);
+    if (decodedToken.handle !== found_job.rows[0].company) {
       return res.status(403).json({ message: 'Unauthorized -- wrong company' });
     }
+
     const oldData = await db.query('SELECT * FROM jobs WHERE id=$1', [
       req.params.id
     ]);

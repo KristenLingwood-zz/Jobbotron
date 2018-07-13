@@ -6,7 +6,8 @@ const morgan = require('morgan');
 const userRoutes = require('./routes/users');
 const companyRoutes = require('./routes/companies');
 const jobRoutes = require('./routes/jobs');
-const authRoutes = require('./routes/authROutes');
+const authRoutes = require('./routes/authRoutes');
+const APIError = require('./APIError');
 
 app.use(bodyParser.json());
 // TODO:BONUS: if I build a frontend there's something else I have to do with bodyParser; check W6-FRI notes
@@ -41,7 +42,7 @@ app.use((req, res, next) => {
 //   });
 // });
 
-//from Michel 7/12 lecture:
+//from Michael 7/12 lecture:
 app.use((error, request, response, next) => {
   // format built-in errors
   if (!(error instanceof APIError)) {
@@ -49,9 +50,8 @@ app.use((error, request, response, next) => {
   }
   console.log(error);
   // log the error stack if we're in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error(error.stack); //eslint-disable-line no-console
-  }
+
+  console.error(error.stack); //eslint-disable-line no-console
 
   return response.status(error.status).json(error);
 });

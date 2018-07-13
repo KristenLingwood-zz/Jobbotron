@@ -107,7 +107,7 @@ describe('POST /jobs', () => {
 describe('PATCH /jobs/:id', () => {
   test('successfully patches own job', async () => {
     const response = await request(app)
-      .patch('/jobs/4')
+      .patch('/jobs/5')
       .set('authorization', auth.company_token)
       .send({
         salary: 6
@@ -121,20 +121,21 @@ describe('PATCH /jobs/:id', () => {
   });
 });
 
-// describe('DELETE /users/:username', () => {
-//   test('successfully deletes own user', async () => {
-//     const response = await request(app)
-//       .delete(`/users/${auth.current_username}`)
-//       .set('authorization', auth.token);
-//     expect(response.status).toBe(200);
-//     expect(response.body).toEqual({ message: 'User deleted' });
-//   });
-// });
+describe('DELETE /jobs/:id', () => {
+  test('successfully deletes own job', async () => {
+    const response = await request(app)
+      .delete(`/jobs/6`)
+      .set('authorization', auth.company_token);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: 'Job deleted' });
+  });
+});
 
 afterEach(async () => {
   //delete the users and company users
   await db.query('DELETE FROM users');
   await db.query('DELETE FROM companies');
+  await db.query('DELETE FROM jobs');
 });
 
 afterAll(async () => {

@@ -101,6 +101,15 @@ describe('POST /users', () => {
       });
     expect(response.body).toHaveProperty('first_name', 'Bobson');
   });
+  test('returns 400 bad request', async () => {
+    const response = await request(app)
+      .post('/users')
+      .send({
+        username: 'wompwomp'
+      });
+    expect(response.status).toBe(400);
+    expect(response.body.error).toHaveProperty('title', 'Bad Request');
+  });
 });
 
 describe('PATCH /users/:username', () => {
