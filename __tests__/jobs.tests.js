@@ -151,6 +151,30 @@ describe('DELETE /jobs/:id', () => {
   });
 });
 
+describe('POST/GET /jobs/:id/applications', () => {
+  test('successfully adds job application', async () => {
+    const response = await request(app)
+      .post(`/jobs/9/applications`)
+      .set('authorization', auth.token);
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty(
+      'message',
+      'Application received for job #9'
+    );
+    const getResponse = await request(app)
+      .get(`/jobs/9/applications`)
+      .set('authorization', auth.company_token);
+    // expect(response.status).toBe(200);
+    expect(getResponse.body[0]).toHaveProperty('job_id', 9);
+    const getUserResponse = await request(app)
+      .get(`/jobs/9/applications`)
+      .set('authorization', auth.token);
+    // expect(response.status).toBe(200);
+    console.log('FIND ME', getUserResponse);
+    expect(getUserResponse.body[0]).toHaveProperty('job_id', 9);
+  });
+});
+
 afterEach(async () => {
   //delete the users and company users
   await db.query('DELETE FROM users');

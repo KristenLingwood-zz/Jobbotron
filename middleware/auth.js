@@ -10,6 +10,21 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
+function ensureUserAcct(req, res, next) {
+  try {
+    const token = req.headers.authorization;
+    const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
+    if (decodedToken.acctType === 'company') {
+      return res
+        .status(403)
+        .json({ message: 'Unauthorized -- not a user account' });
+    }
+    return next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Unauthorized -- not logged in' });
+  }
+}
+
 function ensureCompanyAcct(req, res, next) {
   try {
     const token = req.headers.authorization;
@@ -71,5 +86,6 @@ module.exports = {
   ensureLoggedIn,
   ensureCorrectUser,
   ensureCorrectCompany,
-  ensureCompanyAcct
+  ensureCompanyAcct,
+  ensureUserAcct
 };

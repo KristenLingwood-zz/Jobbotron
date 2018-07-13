@@ -5,7 +5,8 @@ const jsonwebtoken = require('jsonwebtoken');
 const {
   ensureLoggedIn,
   ensureCompanyAcct,
-  ensureCorrectCompany
+  ensureCorrectCompany,
+  ensureUserAcct
 } = require('../middleware/auth.js');
 const { validate } = require('jsonschema');
 const jobsPostSchema = require('../schemas/jobsPostSchema.json');
@@ -111,6 +112,60 @@ router.delete('/:id', async (req, res, next) => {
     }
     await db.query('DELETE FROM jobs WHERE id=$1', [req.params.id]);
     return res.json({ message: 'Job deleted' });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// post apply to a job
+router.post('/:id/applications', ensureUserAcct, async (req, res, next) => {
+  try {
+    const token = req.headers.authorization;
+    const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
+    const user_id = decodedToken.id;
+    await db.query('INSERT INTO jobs_users (user_id, job_id) VALUES ($1, $2)', [
+      user_id,
+      req.params.id
+    ]);
+    return res.json({
+      message: `Application received for job #${req.params.id}`
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// company can see applications for specific job
+router.get('/:id/applications', async (req, res, next) => {
+  //change to take out ensurecompany acct. Write conditional, if company do one thing, if user do something else.
+  try {
+    const token = req.headers.authorization;
+    const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
+    if (decodedToken.acctType === 'company') {
+      const currentCompany = await db.query(
+        'SELECT company FROM jobs WHERE id=$1',
+        [req.params.id]
+      );
+      if (currentCompany.rows[0].company !== decodedToken.handle) {
+        return res
+          .status(403)
+          .json({ message: 'Unauthorized -- wrong company' });
+      }
+      const data = await db.query('SELECT * FROM jobs_users WHERE job_id=$1', [
+        req.params.id
+      ]);
+      return res.json(data.rows);
+    } else {
+      const data = await db.query(
+        'SELECT * FROM jobs_users WHERE job_id=$1 AND user_id=$2',
+        [req.params.id, decodedToken.id]
+      );
+      if (data.rows.length < 1) {
+        return res.json({ message: 'User has no applications for this job.' });
+      } else {
+        return res.json(data.rows);
+      }
+    }
   } catch (err) {
     return next(err);
   }

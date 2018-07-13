@@ -50,6 +50,7 @@ router.post('/user-auth', async (req, res, next) => {
 
     const token = jsonwebtoken.sign(
       {
+        id: userData.rows[0].id,
         username: userData.rows[0].username,
         acctType: 'individual'
       },
