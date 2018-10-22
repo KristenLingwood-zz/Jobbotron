@@ -44,7 +44,7 @@ GET: returns a list of all companies
 
 POST: creates a new company
 
-#### /companies/:id
+### /companies/:id
 
 GET: returns a single company info by its id
 
