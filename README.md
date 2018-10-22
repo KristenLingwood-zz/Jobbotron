@@ -1,6 +1,6 @@
 Jobbotron is a Node.js backend for a Linked In/Angel List clone.
 
-###To run locally:
+### To run locally:
 
 1. Fork/clone the repository
 2. cd into repo's folder
@@ -10,11 +10,13 @@ Jobbotron is a Node.js backend for a Linked In/Angel List clone.
 
 ### Endpoints
 
-##/users
+## /users
+
 GET: returns a list of all users
 POST: creates a new user
 
-##/users/:id
+## /users/:id
+
 GET: returns a single user info by its id
 PATCH: updates existing user by id and returns updated user info
 DELETE: removes an existing user and returns the deleted user
@@ -33,11 +35,13 @@ user object (JSON):
 }
 ```
 
-##/companies
+## /companies
+
 GET: returns a list of all companies
 POST: creates a new company
 
-##/companies/:id
+## /companies/:id
+
 GET: returns a single company info by its id
 PATCH: updates existing company by id and returns updated company info
 DELETE: removes an existing company and returns the deleted company
@@ -55,7 +59,8 @@ company object (JSON):
 }
 ```
 
-##/jobs
+## /jobs
+
 GET: returns a list of all jobs
 POST: creates a new job
 
