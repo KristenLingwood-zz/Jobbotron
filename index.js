@@ -23,14 +23,14 @@ app.use((req, res, next) => {
   return next(err); // pass the error to the next piece of middleware
 });
 
-app.use((error, request, response, next) => {
+app.use((error, req, res, next) => {
   // format built-in errors
   if (!(error instanceof APIError)) {
     error = new APIError(500, error.type, error.message);
   }
   console.log(error);
 
-  return response.status(error.status).json(error);
+  return res.status(error.status).json(error);
 });
 
 module.exports = app;

@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/index');
 const bcrypt = require('bcrypt');
-const jsonwebtoken = require('jsonwebtoken');
 const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth');
 const { validate } = require('jsonschema');
 const usersPostSchema = require('../schemas/usersPostSchema');

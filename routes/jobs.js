@@ -5,7 +5,6 @@ const jsonwebtoken = require('jsonwebtoken');
 const {
   ensureLoggedIn,
   ensureCompanyAcct,
-  ensureCorrectCompany,
   ensureUserAcct
 } = require('../middleware/auth.js');
 const { validate } = require('jsonschema');
@@ -137,7 +136,6 @@ router.post('/:id/applications', ensureUserAcct, async (req, res, next) => {
 
 // company can see applications for specific job
 router.get('/:id/applications', async (req, res, next) => {
-  //change to take out ensurecompany acct. Write conditional, if company do one thing, if user do something else.
   try {
     const token = req.headers.authorization;
     const decodedToken = jsonwebtoken.verify(token, 'CONTIGO');
@@ -187,7 +185,6 @@ router.get('/:id/applications/:app_id', async (req, res, next) => {
       }
     } else {
       //if acct individual
-      // decodedToken.id
       const data = await db.query(
         `SELECT user_id FROM jobs_users WHERE id=$1`,
         [req.params.app_id]
@@ -223,7 +220,6 @@ router.delete('/:id/applications/:app_id', async (req, res, next) => {
       }
     } else {
       //if acct individual
-      // decodedToken.id
       const data = await db.query(
         `SELECT user_id FROM jobs_users WHERE id=$1`,
         [req.params.app_id]

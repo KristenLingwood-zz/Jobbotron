@@ -6,7 +6,7 @@ class APIError extends Error {
     title = 'Internal Server Error',
     message = 'Something bad happened.'
   ) {
-    super(message); //call parent class constructor (error) with message
+    super(message);
     this.status = status;
     this.title = title;
     this.message = message;
@@ -27,6 +27,3 @@ class APIError extends Error {
 // next(new APIError(401, 'unauthorized', 'You must auth first.'));
 
 module.exports = APIError;
-
-//need to require APIError wherever you use it
-// const APIError = require('./APIError')
