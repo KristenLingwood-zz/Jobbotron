@@ -10,9 +10,10 @@ Jobbotron is a Node.js backend for a Linked In/Angel List clone.
 
 ### Endpoints
 
-## /users
+# /users
 
 GET: returns a list of all users
+
 POST: creates a new user
 
 ## /users/:id
