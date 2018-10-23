@@ -6,7 +6,7 @@ Jobbotron is a Node.js backend for a Linked In/Angel List clone.
 2. cd into repo's folder
 3. `npm install`
 4. `psql < schema.sql`
-5. `nodemon or node app.js`
+5. `nodemon server.js` or `node server.js`
 
 ## Endpoints
 

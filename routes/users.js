@@ -8,6 +8,38 @@ const usersPostSchema = require('../schemas/usersPostSchema');
 const usersPatchSchema = require('../schemas/usersPatchSchema');
 const APIError = require('../APIError');
 
+// GET /users
+router.get('/', ensureLoggedIn, async (req, res, next) => {
+  try {
+    const limit = !req.query.limit ? 50 : Math.min(req.query.limit, 50);
+    const offset = req.query.offset || 0;
+    let data;
+    if (!req.query.search) {
+      data = await db.query(
+        `SELECT username, first_name, last_name, email, photo, current_company, array_agg(job_id) as applied_to 
+      FROM users 
+      LEFT OUTER JOIN jobs_users 
+      ON (users.id = jobs_users.user_id) 
+      GROUP BY users.id LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      );
+    } else {
+      data = await db.query(
+        `SELECT username, first_name, last_name, email, photo, current_company, array_agg(job_id) as applied_to 
+        FROM users 
+        LEFT OUTER JOIN jobs_users 
+        ON (users.id = jobs_users.user_id) 
+        WHERE username ILIKE $1
+        GROUP BY users.id LIMIT $2 OFFSET $3`,
+        [req.query.search, limit, offset]
+      );
+    }
+    return res.json(data.rows);
+  } catch (err) {
+    return next(err);
+  }
+});
+
 // POST /users
 router.post('', async (req, res, next) => {
   try {
@@ -53,38 +85,6 @@ router.post('', async (req, res, next) => {
   }
 });
 
-// GET /users
-router.get('/', ensureLoggedIn, async (req, res, next) => {
-  try {
-    const limit = !req.query.limit ? 50 : Math.min(req.query.limit, 50);
-    const offset = req.query.offset || 0;
-    let data;
-    if (!req.query.search) {
-      data = await db.query(
-        `SELECT username, first_name, last_name, email, photo, current_company, array_agg(job_id) as applied_to 
-      FROM users 
-      LEFT OUTER JOIN jobs_users 
-      ON (users.id = jobs_users.user_id) 
-      GROUP BY users.id LIMIT $1 OFFSET $2`,
-        [limit, offset]
-      );
-    } else {
-      data = await db.query(
-        `SELECT username, first_name, last_name, email, photo, current_company, array_agg(job_id) as applied_to 
-        FROM users 
-        LEFT OUTER JOIN jobs_users 
-        ON (users.id = jobs_users.user_id) 
-        WHERE username ILIKE $1
-        GROUP BY users.id LIMIT $2 OFFSET $3`,
-        [req.query.search, limit, offset]
-      );
-    }
-    return res.json(data.rows);
-  } catch (err) {
-    return next(err);
-  }
-});
-
 // GET /users/:username
 router.get('/:username', ensureLoggedIn, async (req, res, next) => {
   try {
@@ -112,19 +112,6 @@ router.patch('/:username', ensureCorrectUser, async (req, res, next) => {
         new APIError(
           400,
           'Bad Request',
-          validation.errors.map(e => e.stack).join('. ')
-        )
-      );
-    }
-    const existingUser = await db.query(
-      'SELECT username FROM users WHERE username=$1',
-      [req.body.username]
-    );
-    if (existingUser.rows.length > 0) {
-      return next(
-        new APIError(
-          409,
-          'Conflict',
           validation.errors.map(e => e.stack).join('. ')
         )
       );

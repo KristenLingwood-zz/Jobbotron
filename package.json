@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
   "keywords": [],
-  "description": "",
+  "description": "Jobbotron is a Node.js backend for a Linked In/Angel List clone.",
   "dependencies": {
     "bcrypt": "^3.0.0",
     "body-parser": "^1.18.3",
@@ -19,7 +20,22 @@
     "morgan": "^1.9.0",
     "pg": "^7.4.3"
   },
+  "jest": {
+    "testEnvironment": "node"
+  },
   "devDependencies": {
-    "supertest": "^3.1.0"
-  }
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^23.6.0",
+    "superagent": "^4.0.0-beta.5",
+    "supertest": "^3.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KristenLingwood/Jobbotron.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KristenLingwood/Jobbotron/issues"
+  },
+  "homepage": "https://github.com/KristenLingwood/Jobbotron#readme"
 }
